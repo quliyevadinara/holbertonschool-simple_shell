@@ -1,104 +1,93 @@
 #include "shell.h"
 
 /**
- * check_absolute_path - Check if command is absolute path
- * @command: The command to check
- * Return: command if exists, NULL otherwise
+ * build_full_path - Build full path from directory and command
+ * @dir: Directory path
+ * @cmd: Command name
+ * Return: Full path string
  */
-char *check_absolute_path(char *command)
+char *build_full_path(char *dir, char *cmd)
 {
-	struct stat buffer;
+	int len_dir, len_cmd;
+	char *full_path;
 
-	if (command[0] == '/')
-	{
-		if (stat(command, &buffer) == 0)
-			return (command);
+	len_dir = strlen(dir);
+	len_cmd = strlen(cmd);
+	full_path = malloc(len_dir + len_cmd + 2);
+	
+	if (!full_path)
 		return (NULL);
-	}
-	return (NULL);
+	
+	strcpy(full_path, dir);
+	strcat(full_path, "/");
+	strcat(full_path, cmd);
+	
+	return (full_path);
 }
 
 /**
- * build_path - Build full path for command
- * @directory: Directory path
- * @command: Command name
- * Return: Full path
- */
-char *build_path(char *directory, char *command)
-{
-	int command_length, directory_length;
-	char *file_path;
-
-	command_length = strlen(command);
-	directory_length = strlen(directory);
-	file_path = malloc(command_length + directory_length + 2);
-
-	if (!file_path)
-		return (NULL);
-
-	strcpy(file_path, directory);
-	strcat(file_path, "/");
-	strcat(file_path, command);
-
-	return (file_path);
-}
-
-/**
- * search_in_path - Search command in PATH directories
- * @path: PATH string
+ * find_in_path - Search for command in PATH
+ * @path_env: PATH environment string
  * @command: Command to find
- * Return: Full path or NULL
+ * Return: Full path to command or NULL
  */
-char *search_in_path(char *path, char *command)
+char *find_in_path(char *path_env, char *command)
 {
-	char *path_copy, *path_token, *file_path;
-	struct stat buffer;
+	char *path_copy, *token, *full_path;
+	struct stat st;
 
-	path_copy = strdup(path);
-	path_token = strtok(path_copy, ":");
+	path_copy = strdup(path_env);
+	if (!path_copy)
+		return (NULL);
 
-	while (path_token != NULL)
+	token = strtok(path_copy, ":");
+	while (token)
 	{
-		file_path = build_path(path_token, command);
-		if (file_path && stat(file_path, &buffer) == 0)
+		full_path = build_full_path(token, command);
+		if (full_path && stat(full_path, &st) == 0)
 		{
 			free(path_copy);
-			return (file_path);
+			return (full_path);
 		}
-		free(file_path);
-		path_token = strtok(NULL, ":");
+		free(full_path);
+		token = strtok(NULL, ":");
 	}
+	
 	free(path_copy);
 	return (NULL);
 }
 
 /**
- * get_path - Get the full path of a command
- * @command: The command to find
- * @env: Environment variables
+ * get_path - Get full path of a command
+ * @command: Command name
+ * @env: Environment variables array
  * Return: Full path or NULL
  */
 char *get_path(char *command, char **env)
 {
-	char *path = NULL;
-	char *result;
+	struct stat st;
 	int i;
+	char *path_value;
 
-	result = check_absolute_path(command);
-	if (result)
-		return (result);
+	/* Handle absolute paths and relative paths (/, ./, ../) */
+	if (strchr(command, '/') != NULL)
+	{
+		if (stat(command, &st) == 0)
+			return (command);
+		return (NULL);
+	}
 
-	for (i = 0; env[i]; i++)
+	/* Search in PATH */
+	i = 0;
+	while (env[i])
 	{
 		if (strncmp(env[i], "PATH=", 5) == 0)
 		{
-			path = env[i] + 5;
-			break;
+			path_value = env[i] + 5;
+			return (find_in_path(path_value, command));
 		}
+		i++;
 	}
-
-	if (path)
-		return (search_in_path(path, command));
 
 	return (NULL);
 }
