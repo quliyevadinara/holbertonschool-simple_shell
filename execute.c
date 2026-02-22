@@ -3,9 +3,10 @@
 /**
  * execute - Execute a command
  * @args: Array of arguments
+ * @env: Environment variables
  * Return: 1 to continue, 0 to exit
  */
-int execute(char **args)
+int execute(char **args, char **env)
 {
 	pid_t pid;
 	int status;
@@ -14,9 +15,9 @@ int execute(char **args)
 	if (strcmp(args[0], "exit") == 0)
 		return (shell_exit(args));
 	if (strcmp(args[0], "env") == 0)
-		return (shell_env(args));
+		return (shell_env(args, env));
 
-	command = get_path(args[0]);
+	command = get_path(args[0], env);
 	if (command == NULL)
 	{
 		write(STDERR_FILENO, args[0], strlen(args[0]));
@@ -27,7 +28,7 @@ int execute(char **args)
 	pid = fork();
 	if (pid == 0)
 	{
-		if (execve(command, args, environ) == -1)
+		if (execve(command, args, env) == -1)
 		{
 			perror("Error");
 			exit(EXIT_FAILURE);

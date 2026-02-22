@@ -14,17 +14,18 @@ int shell_exit(char **args)
 /**
  * shell_env - Print environment variables
  * @args: Array of arguments
+ * @env: Environment variables
  * Return: 1 to continue
  */
-int shell_env(char **args)
+int shell_env(char **args, char **env)
 {
 	int i = 0;
 
 	(void)args;
 
-	while (environ[i])
+	while (env[i])
 	{
-		write(STDOUT_FILENO, environ[i], strlen(environ[i]));
+		write(STDOUT_FILENO, env[i], strlen(env[i]));
 		write(STDOUT_FILENO, "\n", 1);
 		i++;
 	}

@@ -12,14 +12,15 @@
 
 #define BUFFER_SIZE 1024
 
-extern char **environ;
-
 /* Function prototypes */
 char *read_line(void);
 char **parse_line(char *line);
-int execute(char **args);
-char *get_path(char *command);
+int execute(char **args, char **env);
+char *get_path(char *command, char **env);
 int shell_exit(char **args);
-int shell_env(char **args);
+int shell_env(char **args, char **env);
+char *check_absolute_path(char *command);
+char *build_path(char *directory, char *command);
+char *search_in_path(char *path, char *command);
 
 #endif
