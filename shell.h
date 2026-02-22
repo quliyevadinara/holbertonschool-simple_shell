@@ -10,17 +10,16 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#define BUFFER_SIZE 1024
-
 /* Function prototypes */
 char *read_line(void);
 char **parse_line(char *line);
-int execute(char **args, char **env);
+int execute(char **args, char **env, int *last_status, 
+            char *prog_name, int cmd_count);
 char *get_path(char *command, char **env);
 int shell_exit(char **args);
 int shell_env(char **args, char **env);
-char *check_absolute_path(char *command);
-char *build_path(char *directory, char *command);
-char *search_in_path(char *path, char *command);
+char *build_full_path(char *dir, char *cmd);
+char *find_in_path(char *path_env, char *command);
+void print_error(char *prog_name, int cmd_count, char *command);
 
 #endif
